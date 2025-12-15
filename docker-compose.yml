@@ -1,0 +1,51 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: prod_db
+
+    volumes:
+      - mydata:/var/lib/mysql
+
+    networks:
+      - spring-network
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  api:
+    build: .
+    restart: unless-stopped
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/prod_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: rootpassword
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQLDialect
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    networks:
+      - spring-network
+
+    ports:
+      - "8080:8080"
+
+
+networks:
+  spring-network:
+    driver: bridge
+
+
+volumes:
+  mydata:
+    driver: local
