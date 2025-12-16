@@ -4,8 +4,8 @@ services:
     restart: unless-stopped
 
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: prod_db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
 
     volumes:
       - mydata:/var/lib/mysql
@@ -14,7 +14,7 @@ services:
       - spring-network
 
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,12 +22,12 @@ services:
 
   api:
     build: .
-    restart: unless-stopped
+    restart: "no"
 
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/prod_db
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: rootpassword
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:${MYSQL_PORT}/${MYSQL_DATABASE}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQLDialect
 
     depends_on:
